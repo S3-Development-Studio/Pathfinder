@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Gather preferences
         const preferences = {
+            city: document.getElementById('city').value,
             walkingDistanceKm: parseFloat(document.getElementById('walkingDistance').value),
             transportMode: document.getElementById('transportMode').value,
             weather: document.getElementById('weather').value,

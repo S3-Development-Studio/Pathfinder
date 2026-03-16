@@ -2,6 +2,8 @@ namespace Pathfinder.Models;
 
 public class UserPreferences
 {
+    public string City { get; set; } = "Warszawa";
+    
     // Preferred walking distance overall in km
     public double WalkingDistanceKm { get; set; }
     

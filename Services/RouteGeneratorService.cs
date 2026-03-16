@@ -25,6 +25,9 @@ public class RouteGeneratorService
             allAttractions = allAttractions.Where(a => !a.IsOutdoor).ToList();
         }
 
+        // 2. Filter by City
+        allAttractions = allAttractions.Where(a => a.City.Equals(preferences.City, StringComparison.OrdinalIgnoreCase)).ToList();
+
         if (!allAttractions.Any())
         {
             return new RoutePlan();

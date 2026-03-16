@@ -21,6 +21,15 @@
         <main class="glass-panel">
             <form id="preferences-form">
                 <div class="form-group">
+                    <label for="city">Wybierz Miasto</label>
+                    <select id="city">
+                        <option value="Warszawa">Warszawa</option>
+                        <option value="Kraków">Kraków</option>
+                        <option value="Gdańsk">Gdańsk</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
                     <label for="walkingDistance">Ile chcesz dzisiaj przejść/przejechać? (w kilometrach)</label>
                     <div class="range-container">
                         <input type="range" id="walkingDistance" min="1" max="20" step="1" value="5">
