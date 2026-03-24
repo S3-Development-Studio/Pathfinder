@@ -77,5 +77,84 @@ dotnet run
    Zaprogramowano re-używalną, generyczną pre-warstwę HTTP - `ValidationFilter<T>`.
 3. **Globalna Obsługa Wyjątków z ProblemDetails**: 
    Serwer wpiął scentralizowany globalny przechwytywacz błędów oparty pod nowy Interfejs `IExceptionHandler` (.NET 8/9). Formatuje on m.in naruszenia logiki jak `CapacityExceededException` i serwuje idealnie sformatowany standard **ProblemDetails (RFC 7807)** (Standaryzowany zwrot informujący klienta o polu `status`, `title` i `detail` by usunąć nieeleganckie rzucanie Stack Trace'm z logów). W tle wstrzyknięty loguje awarie obiektem `ILogger`.
-4. **Asynchroniczna Ochrona Pamięci**: 
-   Minimal API wyposażono w delegat `CancellationToken` zapobiegając bezpowrotnemu pożerowaniu (Memory Leaks) przestrzeni RAM serwera w wypadku fizycznego przerwania żądania wygenerowania mapy przez urządzenie Klienta mobilnego.
+80: 4. **Asynchroniczna Ochrona Pamięci**: 
+81:    Minimal API wyposażono w delegat `CancellationToken` zapobiegając bezpowrotnemu pożerowaniu (Memory Leaks) przestrzeni RAM serwera w wypadku fizycznego przerwania żądania wygenerowania mapy przez urządzenie Klienta mobilnego.
+
+---
+
+## 6. Schemat Architektury Systemu (Wizualizacja)
+
+Poniższy graf przedstawia ostateczny kształt architektury aplikacji, uwzględniając podział na warstwy (Logika Minimal API, Infrastruktura, Serwisy Aplikacyjne, Domena klasy Enterprise) oraz przepływ procesowania.
+
+```mermaid
+graph TD
+    %% Stylizacja
+    classDef apiFill fill:#2b2d42,stroke:#8d99ae,stroke-width:2px,color:#edf2f4
+    classDef moduleFill fill:#118ab2,stroke:#073b4c,stroke-width:2px,color:#fff
+    classDef domainFill fill:#06d6a0,stroke:#073b4c,stroke-width:2px,color:#000
+    classDef infraFill fill:#ffd166,stroke:#073b4c,stroke-width:2px,color:#000
+    classDef externalFill fill:#ef476f,stroke:#073b4c,stroke-width:2px,color:#fff
+
+    Client([Klient Wwwroot - Interfejs Webowy]):::externalFill
+
+    subgraph ProgramAPI ["Warstwa Prezentacji (Minimal API ASP.NET Core)"]
+        Program[Program.cs]:::apiFill
+        Ext[ModuleExtensions.cs]:::apiFill
+        RE[RoutingEndpoints.cs]:::apiFill
+        
+        subgraph Pipeline ["Potok - Middleware"]
+            VP[ValidationFilter]:::apiFill
+            GEH[GlobalExceptionHandler]:::apiFill
+        end
+        
+        Program -->|Wstrzykuje Moduły| Ext
+        Program -->|Ładuje Endpointy| RE
+        Program -->|Przechwytywacz| GEH
+        RE -->|Odrzuca złe pakiety| VP
+    end
+
+    Client -->|Żąda wygenerowania JSON /api/route| RE
+    Client -.->|Przechwyt problemów 500 do RFC7807| GEH
+
+    subgraph Modules ["Modular Monolith (Podział Logiczny na Moduły biznesowe)"]
+        
+        subgraph Routing ["Moduł: Routing (Pathfinding)"]
+            RGS(RouteGeneratorService - Application):::moduleFill
+            RP(RoutePlan - Aggregate Root):::domainFill
+            RSeg(RouteSegment - Entity):::domainFill
+            UPV[UserPreferencesValidator]:::moduleFill
+            
+            RGS -->|Zarządza Cyklem Kosztów| RP
+            RP -->|Dokleja Punkty| RSeg
+        end
+
+        subgraph Attractions ["Moduł: Baza Miejskich Atrakcji"]
+            Repo(InMemoryAttractionRepository - Infra):::infraFill
+            IRepo(IAttractionRepository - Domain Interface):::domainFill
+            Attr(Attraction - Business Entity):::domainFill
+            GeoVal(GeographicCoordinates - Value Object):::domainFill
+            
+            Repo -.->|Inwersja Zależności DIP| IRepo
+            Attr -->|Hermetyzuje wzór omijając API Map| GeoVal
+        end
+
+        subgraph Gamification ["Moduł: Gamifikacja (Nowość)"]
+            ASC(ActivityScoreCalculator - Application):::moduleFill
+            GamRes(GamificationResult - Domain):::domainFill
+            
+            ASC -->|Generuje nagrody| GamRes
+        end
+        
+    end
+
+    %% Połączenia i użycia między warstwami potokowymi
+    VP -->|Uruchamia Logikę FluentValidation| UPV
+
+    %% Trasy kontrolera
+    RE -->|Zleca Kalkulację Trasy| RGS
+    RE -->|Tworzy Nagrody dla Osi Czasu| ASC
+    
+    %% Zależności Serwisowe Domena
+    RGS -->|Czyta kolekcję danych przez Interfejs| IRepo
+    RGS -->|Buduje instancję wygenerowanego Planu| RP
+```
