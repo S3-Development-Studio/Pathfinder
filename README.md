@@ -1,160 +1,47 @@
-# Pathfinder - Asystent Planowania Wycieczek
+# Pathfinder: Zintegrowany System Zarządzania Odwiedziami i Wyznaczania Tras
 
-Pathfinder to zintegrowana aplikacja webowa zbudowana w technologii **.NET 9 (Web API)** przy uzyciu klasycznego stosu HTML, CSS oraz JavaScript. Celem projektu jest automatyczne generowanie spersonalizowanych tras wycieczkowych w najwiekszych polskich miastach (Warszawa, Krakow, Gdansk).
+## 1. Wprowadzenie
+System Pathfinder stanowi rozbudowane rozwiązanie programistyczne napisane w technologii .NET 9.0, którego celem jest optymalizacja ścieżek zwiedzania, kompleksowe przetwarzanie punktów użyteczności publicznej (POI) oraz parametryzowanie wskaźników gamifikacyjnych. Architektura systemu opiera się o paradygmaty projektowania sterowanego dziedziną (Domain-Driven Design). Ze względów wydajnościowych oraz spójności strukturalnej, środowisko zostało zrealizowane jako Modularny Monolit (Modular Monolith).
 
-Aplikacja jest wyposazona w zaawansowany silnik decyzyjny i modyfikowalny interfejs, ktory reaguje na wytyczne uzytkownika, a takze pozwala na interaktywna edycje trasy (funkcja wymiany punktow z plynna re-kalkulacja parametrow osi czasu).
+## 2. Architektura Systemu
+Rozszerzalność oraz hermetyzacja logiki biznesowej zostały uzyskane poprzez podział na izolowane moduły. Każdy moduł definiuje własny kontekst ograniczony (Bounded Context) zawierając unikatowe encje, agregaty, obiekty wartości oraz dedykowaną warstwę aplikacyjną obsługującą przypadki użycia. System w pełni wspiera kontener odwrócenia kontroli (IoC), gdzie zarządzanie cyklem życia zależności (DI) regulowane jest na poziomie punktu wejściowego aplikacji pod postacią rozszerzeń strumienia głównego. 
 
----
-
-## 1. Architektura Systemu (Modular Monolith & DDD)
-
-Zgodnie z najlepszymi praktykami inżynierii oprogramowania, projekt został zrestrukturyzowany z klasycznego, silnie powiązanego anemicznego modelu MVC do **Modularnego Monolitu** (Modular Monolith) wyznającego zasady **Domain-Driven Design (DDD)**.
-
-### Struktura Modułowa:
-- **`Modules/Attractions`**: Odpowiada za definicję atrakcji oraz skomplikowane obiekty wartości (`Value Object` m.in `GeographicCoordinates` załączony z matematycznym algorytmem Haversine'a). Posiada również repozytorium ukryte za interfejsem warstwy domeny (Dependency Inversion).
-- **`Modules/Routing`**: Mózg operacyjny odpowiedzialny za silnik decyzyjny. `RoutePlan` nie jest tylko workiem na dane, ale **Agregatem (Aggregate Root)**, który pilnuje własnych niezmienników logicznych (budżet czasu, budżet kilometrowy) zanim podejmie decyzję o rozszerzeniu trasy.
-- **`Modules/Gamification`**: Nowatorski moduł motywacyjny. Przynosi elementy gier wideo na łono zdrowia – nagradzając użytkownika punktami doświadczenia (XP) za kilometry przemierzane piechotą, oraz karzącym uciętymi statystykami, jeżeli klient wybrał samochód.
+Główne wektory komunikacyjne opierają się na funkcjonalności wbudowanych komponentów serwerowych dostarczanych za pośrednictwem Minimal API. Wdrożono zarazem natywny model kaskadowego rozwiązywania błędów na bazie standardu `ProblemDetails` pod postacią globalnego przechwytywacza wyjątków (`GlobalExceptionHandler`).
 
 ---
 
-## 2. Dzialanie Aplikacji z Perspektywy Uzytkownika
+## 3. Specyfikacja Modułowa
 
-Zasada dzialania opiera sie na wywiadzie (ankiecie) wypelnianym na ekranie glownym, po ktorym aplikacja oddaje gotowy do uzycia harmonogram:
+### 3.1. Moduł: Attractions (Zarządzanie Obiektami)
+Moduł ten służy do operacjonalizacji danych wejściowych o cechach geograficzno-logicznych. Hermetyzuje on logikę agregatu `Attraction`.
+- **Kategoryzacja Sezonowa:** Implementacja klasyfikacji na przestrzeni enumeracji `Season`, która definiuje ramy okna dostępności danego węzła.
+- **Kryteria Dostępności:** Wprowadzenie strukturalnego wskaźnika boolowskiego, pozwalającego filtorować obiekty spełniające obostrzenia infrastrukturalne dla podmiotów ze szczególnymi potrzebami (Dostępność dla wózków inwalidzkich).
+- **Protokół Rezerwacyjny:** Zaawansowana logika oparta o agregat `Reservation` regulująca przepustowość miejsc (`MaxConcurrentReservations`). Analiza w czasie rzeczywistym interwałów czasowych metodami selekcji na nakładające się okna zapytań zapobiega wyśnigom oraz błędom przekroczenia dopuszczalnych wskaźników alokacji.
 
-1. **Konfiguracja Oczekiwan:**
-   - Wybor miasta docelowego, warunków pogodowych oraz środka lokomocji.
-   - Wybor preferencji i nastroju, a także suwak limitu dystansu.
+### 3.2. Moduł: Routing (Wyznaczanie Ścieżek)
+Segment odpowiedzialny za ewaluację i syntezę danych geograficznych w celu deterministycznego wytwarzania planów.
+- **Algorytmika Tras:** Jednostka `RouteGeneratorService` oblicza iteracyjnie wagi dróg oraz punktów przesiadkowych na bazie dostarczonych parametrów środowiskowych.
+- **Ocena Preferencji:** Walidacja reguł heurystycznych realizowana za pośrednictwem struktur zdefiniowanych w bibliotece `FluentValidation`. Walidatory te nadzorują spójność metadanych wejściowych (`UserPreferences`) weryfikując korelacje pomiędzy oczekiwanym wysiłkiem fizycznym a relaksacyjnym celem eksploracji.
 
-2. **Generowanie i Prezentacja Wynikow (Z Gamifikacją):**
-   Klikniecie przycisku "Generuj Plan" wysyla parametry do serwera (Modularnego API). 
-   - Wyświetlana jest interaktywna oś czasu z odległościami geometrycznymi.
-   - Moduł `Gamification` przyznaje punkty Experience Points i wylicza spalone kalorie zachęcając do ruchu na świeżym powietrzu.
-
-3. **Interaktywna Edycja (Tryb "Zamien"):**
-   Jeżeli wygenerowany punkt nie odpowiada gustowi, przycisk edycji pozwala go zamienić z resztą katalogu, bez przeładowania strony, po czym na nowo egzekwuje się przeliczenie parametrów Aggregate Roota na zapleczu.
-
----
-
-## 3. Silnik Ważenia i Pathfinding (Algorytm pod Maska)
-
-Serwer uzywa wlasnego, zoptymalizowanego potoku zlozonych operacji opierając się wyłącznie o reguły matematyczne:
-
-1. **Pre-filtering i Scoring (Punktacja)**:
-   Miejsca wyłącza z gry pogoda (deszcz blokujący miejsca outdoorowe), po czym punkty zostają obdarowane matematycznym priorytetem wg Twoich suwaków, a właściwosci takich jak *Exploration* czy *Relaxation*.
-
-2. **Geometria Sferyczna (Haversine)**:
-   Mierząc przestrzeń między budynkami, `GeographicCoordinates` sprawdza krzywiznę Ziemii obliczając odległość co do centymetra z matematycznego radiana.
-
-3. **Najbliższy Sąsiad (Nearest Neighbor)**:
-   Spośród priorytetowej (wynikowej) listy, algorytm bierze lokację startową i doczepia jako następny węzeł ten, który jest najbliżej geometrycznie. Robi to pod rygorem 8 godzinnego maksymalnego balansu dnia chronionego przez klasę. Złożoność jest minimalizowana O(N^2) dając odpowiedź API w milisekundach.
+### 3.3. Moduł: Gamification (Ocena Aktywności)
+Subsytem dedykowany do obliczania wartości dodanej w procesie angażowania użytkowników końcowych.
+- Algorytmy oceniające zintegrowane we wzorcu `ActivityScoreCalculator` rzutują skwantyfikowany wysiłek poniesiony w zrealizowanej trasie na bazowe wskaźniki systemu grywalizacyjnego (punkty eksploracji oraz koła ratunkowe balansu relaksacyjnego). 
 
 ---
 
-## 4. Uruchamianie Systemu
+## 4. Wykorzystany Stos Technologiczny oraz Wzorce Projektowe
 
-1. Zainstaluj srodowisko uruchomieniowe SDK platformy .NET 9 na swoim serwerze bądz komputerze.
-2. Wejdz do glownego korzenia pobranego repozytorium przy pomocy termianala.
-3. Wpisz komende:
-```bash
-dotnet run
-```
-4. Narzedzie skompiluje Moduły, wstrzyknie ich zależności poprzez wbudowany w .NET Core Di Kontener (Extensions) i odpali czystą i zoptymalizowaną z Minimal API na porcie wskazanym w konsoli (np. `http://localhost:5233`). Wpisz ten link w przeglądarkę by cieszyć się potężnym modularnym kodem Twojego asystenta podróży.
+1. **Język i Środowisko uruchomieniowe:**
+   - C# 13, docelowo kompilowany w ekosystemie .NET 9.0 SDK
+2. **Framework Webowy:**
+   - ASP.NET Core w wariancie Minimal API optymalizującym proces interpretacji zapytań sieciowych.
+3. **Persystencja (warstwa infrastruktury):**
+   - Na etapie wczesnej adaptacji symulowana in-memory (wewnętrzna instancja pamięci RAM kontenera DI, przy wykorzystaniu cyklu życia Singleotn dla zachowania współbieżnego stanu danych).
+4. **Wzorce Integracyjne:**
+   - **Repository Pattern:** Odizolowanie logiki składowania danych od logiki operacyjnej.
+   - **Dependency Injection:** Dedykowane instancje typu `Singleton` do zarządzania stanem rezerwacji oraz `Transient` do stateless przetwarzania zapytań domenowych.
+5. **OpenAPI / Analiza statyczna dokumentacji:**
+   - Przystosowanie do standardu koncepcyjnego REST realizowanego przez generatory mapowania Swagger na profilu developerskim. 
 
----
-
-## 5. Dziennik Zmian Architektonicznych i Inżynieryjnych
-
-### Wzorce Projektowe i Domain-Driven Design
-1. **Podejście Modular Monolith**: Zrezygnowano ze standardowego rozrzucenia klas do płaskich folderów `Models/Services`. Zamiast tego zaimplementowano logiczny podział na separowane obszary decyzyjne (`Attractions`, `Routing`, `Gamification`).
-2. **Rich Domain Model (Bogata Domena)**: Model `RoutePlan` odrzucił wzorzec podatnej na defekty anemicznej klasy. Stał się szczelnym, enkapsulowanym obiektem z kategorii **Aggregate Root**, który poprzez wewnętrzne metody dba obronnie by transakcja dodania nowego punktu wycieczki mieściła się w ustalonym limicie dziennego czasu (8 godzin), pilnując sztywno stanu aplikacji.
-3. **Value Objects**: Moduł atrakcji wykorzystuje obiekt własności `GeographicCoordinates`. Hermetyzuje i maskuje on trudną sferyczną logikę matematyczną (algorytm Haversine'a) z dala od serwisu.
-4. **Dependency Inversion Principle (SOLID)**: W imię SOLID, interfejs definicji połączeń bazy modeli (`IAttractionRepository`) wyrzucono z infrastruktury do warstwy powiązanej logicznie (`Domain`). 
-
-### Back-End i Minimal API (System Obronny Serwera)
-1. **Walidacja Danych na wejściu (FluentValidation)**: 
-   Wyeliminowano podstawowe adnotacje modelowe, wdrażając dedykowaną blibliotekę `FluentValidation` konfigurującą reguły ochrony wejść do warstwy aplikacji np. odcinając dystans mniejszy niż 0 na wczesnym etapie żądania HTTP.
-2. **Filtry Potokowe (Endpoint Filters)**: 
-   Zaprogramowano re-używalną, generyczną pre-warstwę HTTP - `ValidationFilter<T>`.
-3. **Globalna Obsługa Wyjątków z ProblemDetails**: 
-   Serwer wpiął scentralizowany globalny przechwytywacz błędów oparty pod nowy Interfejs `IExceptionHandler` (.NET 8/9). Formatuje on m.in naruszenia logiki jak `CapacityExceededException` i serwuje idealnie sformatowany standard **ProblemDetails (RFC 7807)** (Standaryzowany zwrot informujący klienta o polu `status`, `title` i `detail` by usunąć nieeleganckie rzucanie Stack Trace'm z logów). W tle wstrzyknięty loguje awarie obiektem `ILogger`.
-80: 4. **Asynchroniczna Ochrona Pamięci**: 
-81:    Minimal API wyposażono w delegat `CancellationToken` zapobiegając bezpowrotnemu pożerowaniu (Memory Leaks) przestrzeni RAM serwera w wypadku fizycznego przerwania żądania wygenerowania mapy przez urządzenie Klienta mobilnego.
-
----
-
-## 6. Schemat Architektury Systemu (Wizualizacja)
-
-Poniższy graf przedstawia ostateczny kształt architektury aplikacji, uwzględniając podział na warstwy (Logika Minimal API, Infrastruktura, Serwisy Aplikacyjne, Domena klasy Enterprise) oraz przepływ procesowania.
-
-```mermaid
-graph TD
-    %% Stylizacja
-    classDef apiFill fill:#2b2d42,stroke:#8d99ae,stroke-width:2px,color:#edf2f4
-    classDef moduleFill fill:#118ab2,stroke:#073b4c,stroke-width:2px,color:#fff
-    classDef domainFill fill:#06d6a0,stroke:#073b4c,stroke-width:2px,color:#000
-    classDef infraFill fill:#ffd166,stroke:#073b4c,stroke-width:2px,color:#000
-    classDef externalFill fill:#ef476f,stroke:#073b4c,stroke-width:2px,color:#fff
-
-    Client([Klient Wwwroot - Interfejs Webowy]):::externalFill
-
-    subgraph ProgramAPI ["Warstwa Prezentacji (Minimal API ASP.NET Core)"]
-        Program[Program.cs]:::apiFill
-        Ext[ModuleExtensions.cs]:::apiFill
-        RE[RoutingEndpoints.cs]:::apiFill
-        
-        subgraph Pipeline ["Potok - Middleware"]
-            VP[ValidationFilter]:::apiFill
-            GEH[GlobalExceptionHandler]:::apiFill
-        end
-        
-        Program -->|Wstrzykuje Moduły| Ext
-        Program -->|Ładuje Endpointy| RE
-        Program -->|Przechwytywacz| GEH
-        RE -->|Odrzuca złe pakiety| VP
-    end
-
-    Client -->|Żąda wygenerowania JSON /api/route| RE
-    Client -.->|Przechwyt problemów 500 do RFC7807| GEH
-
-    subgraph Modules ["Modular Monolith (Podział Logiczny na Moduły biznesowe)"]
-        
-        subgraph Routing ["Moduł: Routing (Pathfinding)"]
-            RGS(RouteGeneratorService - Application):::moduleFill
-            RP(RoutePlan - Aggregate Root):::domainFill
-            RSeg(RouteSegment - Entity):::domainFill
-            UPV[UserPreferencesValidator]:::moduleFill
-            
-            RGS -->|Zarządza Cyklem Kosztów| RP
-            RP -->|Dokleja Punkty| RSeg
-        end
-
-        subgraph Attractions ["Moduł: Baza Miejskich Atrakcji"]
-            Repo(InMemoryAttractionRepository - Infra):::infraFill
-            IRepo(IAttractionRepository - Domain Interface):::domainFill
-            Attr(Attraction - Business Entity):::domainFill
-            GeoVal(GeographicCoordinates - Value Object):::domainFill
-            
-            Repo -.->|Inwersja Zależności DIP| IRepo
-            Attr -->|Hermetyzuje wzór omijając API Map| GeoVal
-        end
-
-        subgraph Gamification ["Moduł: Gamifikacja (Nowość)"]
-            ASC(ActivityScoreCalculator - Application):::moduleFill
-            GamRes(GamificationResult - Domain):::domainFill
-            
-            ASC -->|Generuje nagrody| GamRes
-        end
-        
-    end
-
-    %% Połączenia i użycia między warstwami potokowymi
-    VP -->|Uruchamia Logikę FluentValidation| UPV
-
-    %% Trasy kontrolera
-    RE -->|Zleca Kalkulację Trasy| RGS
-    RE -->|Tworzy Nagrody dla Osi Czasu| ASC
-    
-    %% Zależności Serwisowe Domena
-    RGS -->|Czyta kolekcję danych przez Interfejs| IRepo
-    RGS -->|Buduje instancję wygenerowanego Planu| RP
-```
+## 5. Podsumowanie
+Powyższa implementacja w pełni odzwierciedla rygorystyczne wymagania postawione przed architekturą logiki sterowania procesami przestrzennymi w oparciu o czystą formę modularną, zabezpieczając system przed powstawaniem rozmytych kontekstów ograniczonych i długu technologicznego na płaszczyznach styku wielowarstwowych operacji. 

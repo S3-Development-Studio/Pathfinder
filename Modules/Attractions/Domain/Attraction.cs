@@ -38,7 +38,5 @@ public class Attraction
         IsAccessibleForDisabled = isAccessibleForDisabled;
         MaxConcurrentReservations = maxConcurrentReservations;
     }
-
-    // Default constructor for serialization/mocking purposes if needed, though pure DDD avoids it.
     private Attraction() { }
 }
