@@ -1,38 +1,49 @@
-# Pathfinder - Asystent Planowania Wycieczek
+# Pathfinder: Zintegrowany System Zarządzania Odwiedziami i Wyznaczania Tras
 
-Pathfinder to zintegrowana aplikacja webowa zbudowana w technologii .NET 9 (Web API) przy uzyciu klasycznego stosu HTML, CSS oraz JavaScript. Celem projektu jest automatyczne generowanie spersonalizowanych tras wycieczkowych w najwiekszych polskich miastach (Warszawa, Krakow, Gdansk).
+## 1. Wprowadzenie
+System Pathfinder stanowi rozbudowane rozwiązanie programistyczne napisane w technologii .NET 9.0, którego celem jest optymalizacja ścieżek zwiedzania, kompleksowe przetwarzanie punktów użyteczności publicznej (POI) oraz parametryzowanie wskaźników gamifikacyjnych. Architektura systemu opiera się o paradygmaty projektowania sterowanego dziedziną (Domain-Driven Design). Ze względów wydajnościowych oraz spójności strukturalnej, środowisko zostało zrealizowane jako Modularny Monolit (Modular Monolith).
 
-Aplikacja jest wyposazona w zaawansowany silnik decyzyjny i modyfikowalny interfejs, ktory reaguje na wytyczne uzytkownika, a takze pozwala na interaktywna edycje trasy (funkcja wymiany punktow z plynna re-kalkulacja parametrow osi czasu).
+## 2. Architektura Systemu
+Rozszerzalność oraz hermetyzacja logiki biznesowej zostały uzyskane poprzez podział na izolowane moduły. Każdy moduł definiuje własny kontekst ograniczony (Bounded Context) zawierając unikatowe encje, agregaty, obiekty wartości oraz dedykowaną warstwę aplikacyjną obsługującą przypadki użycia. System w pełni wspiera kontener odwrócenia kontroli (IoC), gdzie zarządzanie cyklem życia zależności (DI) regulowane jest na poziomie punktu wejściowego aplikacji pod postacią rozszerzeń strumienia głównego. 
 
----
-
-## 1. Dzialanie Aplikacji z Perspektywy Uzytkownika
-
-Zasada dzialania opiera sie na wywiadzie (ankiecie) wypelnianym na ekranie glownym, po ktorym aplikacja oddaje gotowy do uzycia harmonogram:
-
-1. **Konfiguracja Oczekiwan:**
-   - Wybor miasta docelowego.
-   - Okreslenie warunkow pogodowych (np. "Slonecznie", "Deszczowo").
-   - Wybor srodka lokomocji (Pieszo, Komunikacja Miejska, Samochod).
-   - Ograniczenia dystansowe (suwak limitu pokonanych kilometrow).
-   - Wybor preferencji i nastroju (suwak balansujacy chec eksploracji/zwiedzania w stosunku do checi wypoczynku/relaksu).
-
-2. **Generowanie i Prezentacja Wynikow:**
-   Klikniecie przycisku "Generuj Plan" wysyla parametry do serwera. Po chwili ekran plynnie zamienia sie w interaktywna os czasu. 
-   Oś ukazuje:
-   - Poszczegolne punkty docelowe wraz z kategoryzacja (Plener / Budynek).
-   - Dokladne wyliczenia logistyczne pomiedzy punktami (czas dotarcia oraz dystans wyliczony na podstawie wspolrzednych geograficznych).
-   - Informacje o zalozonym czasie spedzonym w srodku samej atrakcji.
-
-3. **Interaktywna Edycja (Tryb "Zamien"):**
-   Jesli wytypowany przez system punkt uzytkownikowi nie odpowiada, moze on skorzystac z przycisku edycji. Kartoteka zmienia sie w liste zawierajaca wszystkie pozostale, bezpieczne i niedodane jeszcze miejsca w wybranym miescie. Wybranie innej opcji powoduje ukryte zapytanie do serwera (AJAX), ktore pobiera nowy schemat, blyskawicznie aktualizujac statystyki odleglosci i czasu dla calego planu bez przeladowywania strony.
+Główne wektory komunikacyjne opierają się na funkcjonalności wbudowanych komponentów serwerowych dostarczanych za pośrednictwem Minimal API. Wdrożono zarazem natywny model kaskadowego rozwiązywania błędów na bazie standardu `ProblemDetails` pod postacią globalnego przechwytywacza wyjątków (`GlobalExceptionHandler`).
 
 ---
 
-## 2. Architektura Silnika Decyzyjnego (Algorytm pod Maska)
+## 3. Specyfikacja Modułowa
 
-Serwer uzywa wlasnego, zoptymalizowanego potoku zlozonych operacji. Nie korzysta z zewnetrznych platnych uslug typu Google Maps API do trasowania, opierajac sie w calosci o matematyke, co redukuje wady i opoznienia.
+### 3.1. Moduł: Attractions (Zarządzanie Obiektami)
+Moduł ten służy do operacjonalizacji danych wejściowych o cechach geograficzno-logicznych. Hermetyzuje on logikę agregatu `Attraction`.
+- **Kategoryzacja Sezonowa:** Implementacja klasyfikacji na przestrzeni enumeracji `Season`, która definiuje ramy okna dostępności danego węzła.
+- **Kryteria Dostępności:** Wprowadzenie strukturalnego wskaźnika boolowskiego, pozwalającego filtorować obiekty spełniające obostrzenia infrastrukturalne dla podmiotów ze szczególnymi potrzebami (Dostępność dla wózków inwalidzkich).
+- **Protokół Rezerwacyjny:** Zaawansowana logika oparta o agregat `Reservation` regulująca przepustowość miejsc (`MaxConcurrentReservations`). Analiza w czasie rzeczywistym interwałów czasowych metodami selekcji na nakładające się okna zapytań zapobiega wyśnigom oraz błędom przekroczenia dopuszczalnych wskaźników alokacji.
 
+### 3.2. Moduł: Routing (Wyznaczanie Ścieżek)
+Segment odpowiedzialny za ewaluację i syntezę danych geograficznych w celu deterministycznego wytwarzania planów.
+- **Algorytmika Tras:** Jednostka `RouteGeneratorService` oblicza iteracyjnie wagi dróg oraz punktów przesiadkowych na bazie dostarczonych parametrów środowiskowych.
+- **Ocena Preferencji:** Walidacja reguł heurystycznych realizowana za pośrednictwem struktur zdefiniowanych w bibliotece `FluentValidation`. Walidatory te nadzorują spójność metadanych wejściowych (`UserPreferences`) weryfikując korelacje pomiędzy oczekiwanym wysiłkiem fizycznym a relaksacyjnym celem eksploracji.
+
+### 3.3. Moduł: Gamification (Ocena Aktywności)
+Subsytem dedykowany do obliczania wartości dodanej w procesie angażowania użytkowników końcowych.
+- Algorytmy oceniające zintegrowane we wzorcu `ActivityScoreCalculator` rzutują skwantyfikowany wysiłek poniesiony w zrealizowanej trasie na bazowe wskaźniki systemu grywalizacyjnego (punkty eksploracji oraz koła ratunkowe balansu relaksacyjnego). 
+
+---
+
+## 4. Wykorzystany Stos Technologiczny oraz Wzorce Projektowe
+
+1. **Język i Środowisko uruchomieniowe:**
+   - C# 13, docelowo kompilowany w ekosystemie .NET 9.0 SDK
+2. **Framework Webowy:**
+   - ASP.NET Core w wariancie Minimal API optymalizującym proces interpretacji zapytań sieciowych.
+3. **Persystencja (warstwa infrastruktury):**
+   - Na etapie wczesnej adaptacji symulowana in-memory (wewnętrzna instancja pamięci RAM kontenera DI, przy wykorzystaniu cyklu życia Singleotn dla zachowania współbieżnego stanu danych).
+4. **Wzorce Integracyjne:**
+   - **Repository Pattern:** Odizolowanie logiki składowania danych od logiki operacyjnej.
+   - **Dependency Injection:** Dedykowane instancje typu `Singleton` do zarządzania stanem rezerwacji oraz `Transient` do stateless przetwarzania zapytań domenowych.
+5. **OpenAPI / Analiza statyczna dokumentacji:**
+   - Przystosowanie do standardu koncepcyjnego REST realizowanego przez generatory mapowania Swagger na profilu developerskim. 
+
+<<<<<<< HEAD
 Potok dzieli sie na trzy narastajace fazy:
 
 ### Faza Pierwsza - Pre-filtering (Odsiew Twardy)
@@ -107,3 +118,7 @@ Pathfinder/
 ├── wwwroot/            # Frontend (HTML, CSS, JS)
 ├── Program.cs          # Punkt wejścia aplikacji .NET 9
 └── Pathfinder.csproj   # Konfiguracja projektu i zależności
+=======
+## 5. Podsumowanie
+Powyższa implementacja w pełni odzwierciedla rygorystyczne wymagania postawione przed architekturą logiki sterowania procesami przestrzennymi w oparciu o czystą formę modularną, zabezpieczając system przed powstawaniem rozmytych kontekstów ograniczonych i długu technologicznego na płaszczyznach styku wielowarstwowych operacji. 
+>>>>>>> aefc97a0de9f1667d9ea8e096cbc5206dbb6217a
