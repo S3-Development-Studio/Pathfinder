@@ -3,7 +3,6 @@
 Pathfinder to zintegrowana aplikacja webowa zbudowana w technologii .NET 9 (Web API) przy uzyciu klasycznego stosu HTML, CSS oraz JavaScript. Celem projektu jest automatyczne generowanie spersonalizowanych tras wycieczkowych w najwiekszych polskich miastach (Warszawa, Krakow, Gdansk).
 
 Aplikacja jest wyposazona w zaawansowany silnik decyzyjny i modyfikowalny interfejs, ktory reaguje na wytyczne uzytkownika, a takze pozwala na interaktywna edycje trasy (funkcja wymiany punktow z plynna re-kalkulacja parametrow osi czasu).
-
 ---
 
 ## 1. Dzialanie Aplikacji z Perspektywy Uzytkownika
@@ -75,18 +74,6 @@ Skuteczny plan jest nastepnie budowany z zastosowaniem uproszczonego algorytmu *
 Dzieki takiemu wielofazowemu obiegowi danych, aplikacja dobiera idealnie spersonalizowany rygor wyjazdu dzialajac calkowicie deterministycznie. Zastosowanie Najblizszego Sasiada zamiast wpelni zoptymalizowanego TSP (Problem Komiwojazera), sprawia, ze wyliczenie generacji na serwerze i odeslanie calkowitego rezultatu wraz ze spisem JSON dla narzedzi programistycznych to zazwyczaj ulamki nieodczuwalnej mili-sekundy.
 
 ---
-
-### 2.1. Wykorzystane Standardy i Parametry
-Dla zapewnienia najwyższej precyzji, system operuje na stałych wartościach fizycznych:
-
-| Parametr | Opis | Wartość |
-| :--- | :--- | :--- |
-| **R (Radius)** | Średni promień Ziemi przyjęty w Formule Haversine'a | `6371 km` |
-| **V (Walking)** | Średnia prędkość poruszania się pieszego | `5 km/h` |
-| **V (Public)** | Estymowana średnia prędkość komunikacji miejskiej | `15 km/h` |
-| **T (Buffer)** | Domyślny margines czasowy na jedną atrakcję | `45 - 120 min` |
-| **Complexity** | Złożoność obliczeniowa wyznaczania trasy | `O(N²)` |
-
 ## 3. Uruchamianie Systemu
 
 1. Zainstaluj srodowisko uruchomieniowe SDK platformy .NET 9 na swoim serwerze bądz komputerze.
@@ -97,13 +84,3 @@ dotnet run
 ```
 4. Narzedzie samodzielnie skompiluje klasy, narzuci schematy interfejsow, udostepni warstwe Middleware dla zasobow stalych i wypusci zywego hosta Kestrel, otwierajac okno logowania, podajac adres (typowe porty lokalne to np. `http://localhost:5233`), po wklejeniu ktorego do wyszukiwarki bezposrednio korzystamy ze skonfigurowanej witryny asystenta.
 
-
-## 4. Struktura Projektu
-```bash
-Pathfinder/
-├── Data/               # Repozytoria i ziarna danych (JSON)
-├── Models/             # Klasy obiektów (Attraction, RoutePlan)
-├── Services/           # Logika biznesowa i algorytmika
-├── wwwroot/            # Frontend (HTML, CSS, JS)
-├── Program.cs          # Punkt wejścia aplikacji .NET 9
-└── Pathfinder.csproj   # Konfiguracja projektu i zależności
