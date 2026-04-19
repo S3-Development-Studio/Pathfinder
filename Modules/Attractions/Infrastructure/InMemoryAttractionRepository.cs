@@ -35,6 +35,9 @@ public class InMemoryAttractionRepository : IAttractionRepository
             new Attraction(109, "Bulwary Wiślane w Krakowie", "Kraków", 50.0493, 19.9348, true, 3, 10, 90, Season.Summer, true, 400),
             new Attraction(110, "Muzeum Sztuki Współczesnej MOCAK", "Kraków", 50.0470, 19.9602, false, 8, 4, 120, Season.YearRound, true, 100),
             new Attraction(111, "Smocza Jama", "Kraków", 50.0536, 19.9328, false, 7, 4, 45, Season.Summer, false, 20),
+            
+            new Attraction(112, "Bazylika Mariacka - Zwiedzanie Bazyliki", "Krakow", 50.0616, 19.9394, false, 9, 5, 60, Season.YearRound, true, 80),
+            new Attraction(113, "Bazylika Mariacka - Hejnalica (Wieza)", "Krakow", 50.0617, 19.9393, false, 8, 4, 30, Season.Spring, false, 15),
 
             // --- GDAŃSK ---
             new Attraction(201, "Długi Targ i Fontanna Neptuna", "Gdańsk", 54.3486, 18.6534, true, 9, 5, 90, Season.YearRound, true, 800),
