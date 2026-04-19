@@ -36,6 +36,12 @@ public class InMemoryAttractionRepository : IAttractionRepository
             new Attraction(110, "Muzeum Sztuki Współczesnej MOCAK", "Kraków", 50.0470, 19.9602, false, 8, 4, 120, Season.YearRound, true, 100),
             new Attraction(111, "Smocza Jama", "Kraków", 50.0536, 19.9328, false, 7, 4, 45, Season.Summer, false, 20),
 
+            // --- PARK WODNY W KRAKOWIE (Rozbicie na strefy) ---
+            new Attraction(112, "Park Wodny - Hala Basenowa", "Kraków", 50.0886, 19.9822, false, 6, 8, 180, Season.YearRound, true, 500),
+            new Attraction(113, "Park Wodny - Saunarium", "Kraków", 50.0886, 19.9822, false, 2, 10, 120, Season.YearRound, true, 150),
+            new Attraction(114, "Park Wodny - Strefa Zewnętrzna (Plaża)", "Kraków", 50.0886, 19.9822, true, 5, 9, 180, Season.Summer, true, 300),
+            new Attraction(115, "Klub FitPark (Park Wodny)", "Kraków", 50.0886, 19.9822, false, 10, 3, 120, Season.YearRound, true, 100),
+
             // --- GDAŃSK ---
             new Attraction(201, "Długi Targ i Fontanna Neptuna", "Gdańsk", 54.3486, 18.6534, true, 9, 5, 90, Season.YearRound, true, 800),
             new Attraction(202, "Europejskie Centrum Solidarności", "Gdańsk", 54.3608, 18.6493, false, 10, 1, 200, Season.YearRound, true, 150),
