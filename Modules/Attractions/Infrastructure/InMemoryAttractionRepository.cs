@@ -34,6 +34,17 @@ public class InMemoryAttractionRepository : IAttractionRepository
             new Attraction(108, "Kopiec Kościuszki", "Kraków", 50.0551, 19.8935, true, 7, 6, 120, Season.Summer, false, 30),
             new Attraction(109, "Bulwary Wiślane w Krakowie", "Kraków", 50.0493, 19.9348, true, 3, 10, 90, Season.Summer, true, 400),
             new Attraction(110, "Muzeum Sztuki Współczesnej MOCAK", "Kraków", 50.0470, 19.9602, false, 8, 4, 120, Season.YearRound, true, 100),
+
+            // Bazylika Mariacka — Zwiedzanie Bazyliki (Pon-Sob 11:30-18:00, Nd 14:00-18:00)
+            // Bilet normalny 20 zl, ulgowy 10 zl (uczniowie 7-18 lat, studenci 19-26, seniorzy 65+, KDR)
+            // Kontakt: +48 12 357 59 23 / turystyka.mariacki@gmail.com, Plac Mariacki 7
+            new Attraction(112, "Bazylika Mariacka - Zwiedzanie Bazyliki", "Kraków", 50.0616, 19.9394, false, 9, 5, 60, Season.YearRound, true, 80),
+
+            // Bazylika Mariacka — Hejnalica (wieza polnocna, od 10 kwietnia, weekendy: Pt-Nd)
+            // Wejscia co 30 min od 10:10 do 17:30; max 15 osob; dzieci < 7 lat wstep wzbroniony
+            // Bilet normalny 20 zl, ulgowy 15 zl; zakup tylko w dniu wizyty; wejscie od ul. Florianskiej
+            new Attraction(113, "Bazylika Mariacka - Hejnalica (Wieza)", "Kraków", 50.0617, 19.9393, false, 8, 4, 30, Season.Spring, false, 15),
+
             new Attraction(111, "Smocza Jama", "Kraków", 50.0536, 19.9328, false, 7, 4, 45, Season.Summer, false, 20),
 
             // --- GDAŃSK ---
