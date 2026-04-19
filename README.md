@@ -76,6 +76,17 @@ Dzieki takiemu wielofazowemu obiegowi danych, aplikacja dobiera idealnie sperson
 
 ---
 
+### 2.1. Wykorzystane Standardy i Parametry
+Dla zapewnienia najwyższej precyzji, system operuje na stałych wartościach fizycznych:
+
+| Parametr | Opis | Wartość |
+| :--- | :--- | :--- |
+| **R (Radius)** | Średni promień Ziemi przyjęty w Formule Haversine'a | `6371 km` |
+| **V (Walking)** | Średnia prędkość poruszania się pieszego | `5 km/h` |
+| **V (Public)** | Estymowana średnia prędkość komunikacji miejskiej | `15 km/h` |
+| **T (Buffer)** | Domyślny margines czasowy na jedną atrakcję | `45 - 120 min` |
+| **Complexity** | Złożoność obliczeniowa wyznaczania trasy | `O(N²)` |
+
 ## 3. Uruchamianie Systemu
 
 1. Zainstaluj srodowisko uruchomieniowe SDK platformy .NET 9 na swoim serwerze bądz komputerze.
@@ -85,3 +96,14 @@ Dzieki takiemu wielofazowemu obiegowi danych, aplikacja dobiera idealnie sperson
 dotnet run
 ```
 4. Narzedzie samodzielnie skompiluje klasy, narzuci schematy interfejsow, udostepni warstwe Middleware dla zasobow stalych i wypusci zywego hosta Kestrel, otwierajac okno logowania, podajac adres (typowe porty lokalne to np. `http://localhost:5233`), po wklejeniu ktorego do wyszukiwarki bezposrednio korzystamy ze skonfigurowanej witryny asystenta.
+
+
+## 4. Struktura Projektu
+```bash
+Pathfinder/
+├── Data/               # Repozytoria i ziarna danych (JSON)
+├── Models/             # Klasy obiektów (Attraction, RoutePlan)
+├── Services/           # Logika biznesowa i algorytmika
+├── wwwroot/            # Frontend (HTML, CSS, JS)
+├── Program.cs          # Punkt wejścia aplikacji .NET 9
+└── Pathfinder.csproj   # Konfiguracja projektu i zależności
