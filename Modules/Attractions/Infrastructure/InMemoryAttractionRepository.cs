@@ -46,7 +46,21 @@ public class InMemoryAttractionRepository : IAttractionRepository
             new Attraction(207, "Archikatedra Oliwska", "Gdańsk", 54.4110, 18.5583, false, 8, 4, 60, Season.YearRound, true, 60),
             new Attraction(208, "Plaża w Brzeźnie", "Gdańsk", 54.4095, 18.6186, true, 2, 10, 150, Season.Summer, true, 1000),
             new Attraction(209, "Góra Gradowa (Hevelianum)", "Gdańsk", 54.3556, 18.6385, true, 7, 8, 120, Season.YearRound, true, 150),
-            new Attraction(210, "Molo w Brzeźnie", "Gdańsk", 54.4144, 18.6148, true, 3, 10, 60, Season.Summer, true, 200)
+            new Attraction(210, "Molo w Brzeźnie", "Gdańsk", 54.4144, 18.6148, true, 3, 10, 60, Season.Summer, true, 200),
+                
+             // --- OJCOWSKI PARK NARODOWY ---
+            new Attraction(301, "Zamek Kazimierzowski w Ojcowie", "Ojców", 50.2113, 19.8315, true, 8, 3, 60, Season.YearRound, false, 200),
+            new Attraction(302, "Jaskinia Łokietka", "Ojców", 50.2015, 19.8277, false, 9, 1, 60, Season.Summer, false, 60),
+            new Attraction(303, "Jaskinia Ciemna", "Ojców", 50.1972, 19.8242, false, 10, 1, 45, Season.Summer, false, 60),
+            new Attraction(304, "Zamek w Pieskowej Skale i Maczuga Herkulesa", "Sułoszowa", 50.2443, 19.7801, false, 9, 5, 120, Season.YearRound, false, 300),
+            new Attraction(305, "Brama Krakowska i Źródło Miłości", "Ojców", 50.1975, 19.8261, true, 5, 8, 30, Season.YearRound, true, 150),
+            new Attraction(306, "Grodzisko - Kompleks Bł. Salomei", "Ojców", 50.2294, 19.8269, false, 8, 7, 60, Season.YearRound, false, 100),
+            new Attraction(307, "Kaplica Na Wodzie", "Ojców", 50.2155, 19.8285, false, 6, 6, 20, Season.YearRound, true, 50),
+            new Attraction(308, "Ogród Ojcowski", "Ojców", 50.2100, 19.8290, true, 4, 9, 45, Season.Spring, true, 100),
+            new Attraction(309, "Młyn i tartak Boronia", "Ojców", 50.2312, 19.8275, false, 7, 3, 45, Season.YearRound, false, 30),
+            new Attraction(310, "Ekspozycja Przyrodnicza OPN", "Ojców", 50.2110, 19.8300, false, 8, 2, 60, Season.YearRound, true, 100),
+            new Attraction(311, "Szlak Orlich Gniazd (Odcinek OPN)", "Ojców", 50.2114, 19.8315, true, 9, 4, 240, Season.YearRound, true, 1000),
+            new Attraction(312, "Szlak Dolinek Jurajskich (Dolina Sąspowska)", "Ojców", 50.2200, 19.8000, true, 6, 10, 180, Season.YearRound, false, 500)
         };
     }
 }
